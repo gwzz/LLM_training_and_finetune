@@ -1,42 +1,54 @@
 # Transformer
 
-This folder contains scripts and requirements for training and fine-tuning transformer-based models for NLP tasks.
+This folder provides scripts and requirements for training and fine-tuning Qwen3 models.
 
 ## Contents
 
-- `data_processing.py`: Script to load, shuffle, and split datasets into training and validation sets, saving them as JSONL files.
-- `train.py`: Placeholder for model training script.
-- `requirements.txt`: Python dependencies required for data processing and model training.
+- `data_processing.py`: Loads, shuffles, and splits datasets into training and validation sets, saving them as JSONL files.
+- `train.py`: Script for model training (implement your training logic here).
+- `requirements.txt`: Lists Python dependencies for data processing and model training.
+- `dataset.json`: data is downloaded from [modelscope](https://modelscope.cn/datasets/krisfu/delicate_medical_r1_data).
 
-## Usage
+## Getting Started
 
-1. **Install dependencies:**
+### 1. Install Dependencies
 
-   ```sh
-   pip install -r requirements.txt
-   ```
+```sh
+pip install -r requirements.txt
+```
 
-2. **Prepare your dataset:**
-   
-   Ensure your dataset is available as `dataset.json` in the current directory.
+### 2. Prepare Your Dataset
 
-3. **Process data:**
+Place your dataset as `dataset.json` in the current directory.
 
-   ```sh
-   python data_processing.py
-   ```
+### 3. Process Data
 
-   This will create `train_ner.jsonl` and `val_ner.jsonl` files.
+```sh
+python data_processing.py
+```
 
-4. **Train the model:**
+This will generate `train.jsonl` and `val.jsonl` files, and formatted train and validation files `train_format.jsonl` and `val_format.jsonl`
 
-   Implement your training logic in `train.py` and run:
+### 4. Train the Model
 
-   ```sh
-   python train.py
-   ```
+Edit `train.py` with your training logic, then run:
+
+```sh
+python train.py
+```
+
+## Trainning logs
+
+Use `swanlab` to save trainning logs.
 
 ## Notes
 
-- The scripts use [modelscope](https://modelscope.cn/) for dataset handling.
-- Adjust the data paths and parameters as needed for your specific use case.
+- Scripts utilize [modelscope](https://modelscope.cn/) for dataset handling.
+- Adjust data paths and parameters as needed for your use case.
+- Ensure your dataset format matches the expected input for processing
+
+## TODO :construction:
+- [ ] Implement other training mothods 
+   - [ ] Implement training with LoRA
+   - [ ] Implement training with PPO
+- [ ] Implement inference demo
