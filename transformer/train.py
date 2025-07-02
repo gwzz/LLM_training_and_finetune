@@ -5,20 +5,26 @@ import torch
 from datasets import Dataset
 from modelscope import snapshot_download, AutoTokenizer
 from transformers import AutoModelForCausalLM, TrainingArguments, Trainer, DataCollatorForSeq2Seq
+import config
 
 import swanlab
 
+opt = config.get_options()
 os.environ["SWANLAB_PROJECT"]="qwen3-sft"
 MAX_LENGTH = 2048
-MODEL  = "Qwen/Qwen3-1.7B"
+MODEL  = opt.model_name_or_path
 TRAIN_DATASET_PATH = "train_format.jsonl"
 VAL_DATASET_PATH = "val_format.jsonl"
 
 
 swanlab.config.update({
-    "model": "Qwen/Qwen3-1.7B",
+    "model": MODEL,
     "data_max_length": MAX_LENGTH,
     })
+
+
+
+
 
 # define the data processing function for Qwen3 template format
 def process_func(example):
@@ -43,12 +49,12 @@ def process_func(example):
     return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": labels}   
 
 # download the model snapshot from ModelScope, put it in the current directory
-# if you have already downloaded the model, you can comment out this line
-model_dir = snapshot_download("Qwen/Qwen3-1.7B", cache_dir="./", revision="master")
+# if you have already downloaded the model, you can comment out this line, and use the local path directly
+model_dir = snapshot_download(MODEL, cache_dir="./", revision="master")
 
 # Transformers load the model and tokenizer
-tokenizer = AutoTokenizer.from_pretrained("./Qwen/Qwen3-1.7B", use_fast=False, trust_remote_code=True)
-model = AutoModelForCausalLM.from_pretrained("./Qwen/Qwen3-1.7B", device_map="auto", torch_dtype=torch.bfloat16)
+tokenizer = AutoTokenizer.from_pretrained(f"./{MODEL}", use_fast=False, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(f"./{MODEL}", device_map="auto", torch_dtype=torch.bfloat16)
 model.enable_input_require_grads()
 
 # load the training and validation datasets
@@ -60,22 +66,38 @@ eval_df = pd.read_json(VAL_DATASET_PATH, lines=True)
 eval_ds = Dataset.from_pandas(eval_df)
 eval_dataset = eval_ds.map(process_func, remove_columns=eval_ds.column_names)
 
-# set up the training arguments
+#  training type is lora, setting up the LoRA configuration
+if opt.type == 'lora':
+    from peft import LoraConfig, TaskType, get_peft_model
+
+    lora_config = LoraConfig(
+    task_type=TaskType.CAUSAL_LM,
+    target_modules=opt.target_modules,
+    inference_mode=opt.inference_mode,
+    r=opt.r,
+    lora_alpha=opt.lora_alpha,
+    lora_dropout=opt.lora_dropout,
+    )
+    
+    model = get_peft_model(model, lora_config)
+    print(f"LoRA model loaded with config: {lora_config}")
+
+
 args = TrainingArguments(
-    output_dir="./output/Qwen3-1.7B",
-    per_device_train_batch_size=1,
-    per_device_eval_batch_size=1,
-    gradient_accumulation_steps=4,
-    eval_strategy="steps",
-    eval_steps=100,
-    logging_steps=10,
-    num_train_epochs=2,
-    save_steps=400,
-    learning_rate=1e-4,
-    save_on_each_node=True,
-    gradient_checkpointing=True,
-    report_to="swanlab",  # Use swanlab for logging
-    run_name="qwen3-1.7B",
+    output_dir=opt.output_dir,
+    per_device_train_batch_size=opt.per_device_train_batch_size,
+    per_device_eval_batch_size=opt.per_device_eval_batch_size,
+    gradient_accumulation_steps=opt.gradient_accumulation_steps,
+    eval_strategy=opt.eval_strategy,
+    eval_steps=opt.eval_steps,
+    logging_steps=opt.logging_steps,
+    num_train_epochs=opt.num_train_epochs,
+    save_steps=opt.save_steps,
+    learning_rate=opt.learning_rate,
+    save_on_each_node=opt.save_on_each_node,
+    gradient_checkpointing=opt.gradient_checkpointing,
+    report_to=opt.report_to,
+    run_name=opt.run_name,
 )
 
 trainer = Trainer(

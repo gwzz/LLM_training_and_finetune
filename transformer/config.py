@@ -1,0 +1,60 @@
+import argparse  
+  
+def get_options(parser=argparse.ArgumentParser()):
+    parser.add_argument('--type', type=str, default='sft', help='choose the type of training, sft, lora, ppo')
+    parser.add_argument('--dataset_path', type=str, default='./dataset.json', help='Path to the dataset file')
+    parser.add_argument('--model_name_or_path', type=str, default='Qwen/Qwen3-1.7B', help='Model name or path')
+    parser.add_argument('--per_device_train_batch_size', type=int, default=1, help='Batch size per device for training')
+    parser.add_argument('--per_device_eval_batch_size', type=int, default=1, help='Batch size per device for evaluation')
+    parser.add_argument('--gradient_accumulation_steps', type=int, default=4, help='Number of gradient accumulation steps')
+    parser.add_argument('--eval_strategy', type=str, default='steps', help='Evaluation strategy')
+    parser.add_argument('--eval_steps', type=int, default=100, help='Number of steps between evaluations')
+    parser.add_argument('--logging_steps', type=int, default=10, help='Number of steps between logging')
+    parser.add_argument('--num_train_epochs', type=int, default=2, help='Number of training epochs')
+    parser.add_argument('--save_steps', type=int, default=400, help='Number of steps between checkpoints')
+    parser.add_argument('--learning_rate', type=float, default=1e-4, help='Learning rate')
+    parser.add_argument('--save_on_each_node', action='store_true', default=True, help='Save on each node')
+    parser.add_argument('--gradient_checkpointing', action='store_true', default=True, help='Enable gradient checkpointing')
+    parser.add_argument('--output_dir', type=str, default='./output/Qwen3-1.7B', help='Directory to save outputs')
+    parser.add_argument('--report_to', type=str, default='swanlab', help='Reporting tool')
+    parser.add_argument('--run_name', type=str, default='qwen3-1.7B', help='Run name')
+    # options for LoRA and task type
+    parser.add_argument('--task_type', type=str, default='CAUSAL_LM', help='Task type, e.g., CAUSAL_LM')
+    parser.add_argument('--target_modules', nargs='+', default=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], help='Target modules for LoRA')
+    parser.add_argument('--inference_mode', action='store_true', default=False, help='Enable inference mode')
+    parser.add_argument('--r', type=int, default=8, help='LoRA rank')
+    parser.add_argument('--lora_alpha', type=int, default=32, help='LoRA alpha')
+    parser.add_argument('--lora_dropout', type=float, default=0.1, help='LoRA dropout')
+
+    opt = parser.parse_args()  
+  
+    if opt.output_dir:  
+        print(f'Configuration:')
+        print(f'type: {opt.type}')
+        print(f'dataset_path: {opt.dataset_path}')
+        print(f'model_name_or_path: {opt.model_name_or_path}')
+        print(f'per_device_train_batch_size: {opt.per_device_train_batch_size}')
+        print(f'per_device_eval_batch_size: {opt.per_device_eval_batch_size}')
+        print(f'gradient_accumulation_steps: {opt.gradient_accumulation_steps}')
+        print(f'eval_strategy: {opt.eval_strategy}')
+        print(f'eval_steps: {opt.eval_steps}')
+        print(f'logging_steps: {opt.logging_steps}')
+        print(f'num_train_epochs: {opt.num_train_epochs}')
+        print(f'save_steps: {opt.save_steps}')
+        print(f'learning_rate: {opt.learning_rate}')
+        print(f'save_on_each_node: {opt.save_on_each_node}')
+        print(f'gradient_checkpointing: {opt.gradient_checkpointing}')
+        print(f'output_dir: {opt.output_dir}')
+        print(f'report_to: {opt.report_to}')
+        print(f'run_name: {opt.run_name}')
+        print(f'task_type: {opt.task_type}')
+        print(f'target_modules: {opt.target_modules}')
+        print(f'inference_mode: {opt.inference_mode}')
+        print(f'r: {opt.r}')
+        print(f'lora_alpha: {opt.lora_alpha}')
+        print(f'lora_dropout: {opt.lora_dropout}')  
+  
+    return opt  
+  
+if __name__ == '__main__':  
+    opt = get_options()
